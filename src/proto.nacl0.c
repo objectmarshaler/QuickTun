@@ -3,11 +3,11 @@
    permitted provided that the following conditions are met:
 
    1. Redistributions of source code must retain the above copyright notice, this list of
-      conditions and the following disclaimer.
+   conditions and the following disclaimer.
 
    2. Redistributions in binary form must reproduce the above copyright notice, this list
-      of conditions and the following disclaimer in the documentation and/or other materials
-      provided with the distribution.
+   of conditions and the following disclaimer in the documentation and/or other materials
+   provided with the distribution.
 
    THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
    WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
@@ -33,7 +33,7 @@ struct qt_proto_data_nacl0 {
 static int encode(struct qtsession* sess, char* raw, char* enc, int len) {
 	struct qt_proto_data_nacl0* d = (struct qt_proto_data_nacl0*)sess->protocol_data;
 	memset(raw, 0, crypto_box_curve25519xsalsa20poly1305_ZEROBYTES);
-	if (crypto_box_curve25519xsalsa20poly1305_afternm((unsigned char*)enc, (unsigned char*)raw, len+crypto_box_curve25519xsalsa20poly1305_ZEROBYTES, d->cnonce, d->cbefore)) return errorexit("Crypto failed");
+	if (crypto_box_curve25519xsalsa20poly1305_afternm((unsigned char*)enc, (unsigned char*)raw, len + crypto_box_curve25519xsalsa20poly1305_ZEROBYTES, d->cnonce, d->cbefore)) return errorexit("Crypto failed");
 	return len + crypto_box_curve25519xsalsa20poly1305_BOXZEROBYTES;
 }
 
@@ -45,7 +45,7 @@ static int decode(struct qtsession* sess, char* enc, char* raw, int len) {
 	}
 	len -= crypto_box_curve25519xsalsa20poly1305_BOXZEROBYTES;
 	memset(enc, 0, crypto_box_curve25519xsalsa20poly1305_BOXZEROBYTES);
-	if (crypto_box_curve25519xsalsa20poly1305_open_afternm((unsigned char*)raw, (unsigned char*)enc, len+crypto_box_curve25519xsalsa20poly1305_ZEROBYTES, d->cnonce, d->cbefore)) {
+	if (crypto_box_curve25519xsalsa20poly1305_open_afternm((unsigned char*)raw, (unsigned char*)enc, len + crypto_box_curve25519xsalsa20poly1305_ZEROBYTES, d->cnonce, d->cbefore)) {
 		fprintf(stderr, "Decryption failed len=%d\n", len);
 		return -1;
 	}
@@ -59,25 +59,29 @@ static int init(struct qtsession* sess) {
 	memset(d->cnonce, 0, crypto_box_curve25519xsalsa20poly1305_NONCEBYTES);
 	unsigned char cpublickey[crypto_box_curve25519xsalsa20poly1305_PUBLICKEYBYTES], csecretkey[crypto_box_curve25519xsalsa20poly1305_SECRETKEYBYTES];
 	if (!(envval = getconf("PUBLIC_KEY"))) return errorexit("Missing PUBLIC_KEY");
-	if (strlen(envval) != 2*crypto_box_curve25519xsalsa20poly1305_PUBLICKEYBYTES) return errorexit("PUBLIC_KEY length");
+	if (strlen(envval) != 2 * crypto_box_curve25519xsalsa20poly1305_PUBLICKEYBYTES) return errorexit("PUBLIC_KEY length");
 	hex2bin(cpublickey, envval, crypto_box_curve25519xsalsa20poly1305_PUBLICKEYBYTES);
 	if ((envval = getconf("PRIVATE_KEY"))) {
-		if (strlen(envval) != 2*crypto_box_curve25519xsalsa20poly1305_PUBLICKEYBYTES) return errorexit("PRIVATE_KEY length");
+		if (strlen(envval) != 2 * crypto_box_curve25519xsalsa20poly1305_PUBLICKEYBYTES) return errorexit("PRIVATE_KEY length");
 		hex2bin(csecretkey, envval, crypto_box_curve25519xsalsa20poly1305_SECRETKEYBYTES);
-	} else if ((envval = getconf("PRIVATE_KEY_FILE"))) {
+	}
+	else if ((envval = getconf("PRIVATE_KEY_FILE"))) {
 		FILE* pkfile = fopen(envval, "rb");
 		if (!pkfile) return errorexitp("Could not open PRIVATE_KEY_FILE");
 		char pktextbuf[crypto_box_curve25519xsalsa20poly1305_SECRETKEYBYTES * 2];
 		const size_t pktextsize = fread(pktextbuf, 1, sizeof(pktextbuf), pkfile);
 		if (pktextsize == crypto_box_curve25519xsalsa20poly1305_SECRETKEYBYTES) {
 			memcpy(csecretkey, pktextbuf, crypto_box_curve25519xsalsa20poly1305_SECRETKEYBYTES);
-		} else if (pktextsize == 2 * crypto_box_curve25519xsalsa20poly1305_SECRETKEYBYTES) {
+		}
+		else if (pktextsize == 2 * crypto_box_curve25519xsalsa20poly1305_SECRETKEYBYTES) {
 			hex2bin(csecretkey, pktextbuf, crypto_box_curve25519xsalsa20poly1305_SECRETKEYBYTES);
-		} else {
+		}
+		else {
 			return errorexit("PRIVATE_KEY length");
 		}
 		fclose(pkfile);
-	} else {
+	}
+	else {
 		return errorexit("Missing PRIVATE_KEY");
 	}
 	crypto_box_curve25519xsalsa20poly1305_beforenm(d->cbefore, cpublickey, csecretkey);

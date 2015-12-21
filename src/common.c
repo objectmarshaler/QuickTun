@@ -3,11 +3,11 @@
    permitted provided that the following conditions are met:
 
    1. Redistributions of source code must retain the above copyright notice, this list of
-      conditions and the following disclaimer.
+   conditions and the following disclaimer.
 
    2. Redistributions in binary form must reproduce the above copyright notice, this list
-      of conditions and the following disclaimer in the documentation and/or other materials
-      provided with the distribution.
+   of conditions and the following disclaimer in the documentation and/or other materials
+   provided with the distribution.
 
    THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
    WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
@@ -41,15 +41,15 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 #ifdef linux
-	#include <linux/if_tun.h>
-	#include <linux/if_ether.h>
+#include <linux/if_tun.h>
+#include <linux/if_ether.h>
 #else
-	#define ETH_FRAME_LEN 1514
-	#include <net/if_tun.h>
-	#ifdef SOLARIS
-		#include <sys/stropts.h>
-		#include <sys/sockio.h>
-	#endif
+#define ETH_FRAME_LEN 1514
+#include <net/if_tun.h>
+#ifdef SOLARIS
+#include <sys/stropts.h>
+#include <sys/sockio.h>
+#endif
 #endif
 
 #define MAX_PACKET_LEN (ETH_FRAME_LEN+4) //Some space for optional packet information
@@ -67,11 +67,11 @@ struct qtproto {
 	int buffersize_enc;
 	int offset_raw;
 	int offset_enc;
-	int (*encode)(struct qtsession* sess, char* raw, char* enc, int len);
-	int (*decode)(struct qtsession* sess, char* enc, char* raw, int len);
-	int (*init)(struct qtsession* sess);
+	int(*encode)(struct qtsession* sess, char* raw, char* enc, int len);
+	int(*decode)(struct qtsession* sess, char* enc, char* raw, int len);
+	int(*init)(struct qtsession* sess);
 	int protocol_data_size;
-	void (*idle)(struct qtsession* sess);
+	void(*idle)(struct qtsession* sess);
 };
 struct qtsession {
 	struct qtproto protocol;
@@ -82,18 +82,18 @@ struct qtsession {
 	sockaddr_any remote_addr;
 	int use_pi;
 	int poll_timeout;
-	void (*sendnetworkpacket)(struct qtsession* sess, char* msg, int len);
+	void(*sendnetworkpacket)(struct qtsession* sess, char* msg, int len);
 };
 
 #ifdef COMBINED_BINARY
-	extern char* (*getconf)(const char*);
-	extern int errorexit(const char*);
-	extern int errorexitp(const char*);
-	extern void print_header();
-	extern void hex2bin(unsigned char*, const char*, const int);
-	extern int debug;
-	extern int qtrun(struct qtproto* p);
-	extern int qtprocessargs(int argc, char** argv);
+extern char* (*getconf)(const char*);
+extern int errorexit(const char*);
+extern int errorexitp(const char*);
+extern void print_header();
+extern void hex2bin(unsigned char*, const char*, const int);
+extern int debug;
+extern int qtrun(struct qtproto* p);
+extern int qtprocessargs(int argc, char** argv);
 #else
 
 char* (*getconf)(const char*) = getenv;
@@ -141,8 +141,11 @@ static int sockaddr_set_port(sockaddr_any* sa, int port) {
 }
 static int sockaddr_equal(sockaddr_any* a, sockaddr_any* b) {
 	if (a->any.sa_family != b->any.sa_family) return 0;
-	if (a->any.sa_family == AF_INET) return a->ip4.sin_port == b->ip4.sin_port && a->ip4.sin_addr.s_addr == b->ip4.sin_addr.s_addr;
-	if (a->any.sa_family == AF_INET6) return a->ip6.sin6_port == b->ip6.sin6_port && memcmp(&a->ip6.sin6_addr, &b->ip6.sin6_addr, sizeof(struct in6_addr)) == 0 && a->ip6.sin6_scope_id == b->ip6.sin6_scope_id;
+	if (a->any.sa_family == AF_INET) { return a->ip4.sin_port == b->ip4.sin_port && a->ip4.sin_addr.s_addr == b->ip4.sin_addr.s_addr; }
+	if (a->any.sa_family == AF_INET6)
+	{ 
+		return a->ip6.sin6_port == b->ip6.sin6_port && memcmp(&a->ip6.sin6_addr, &b->ip6.sin6_addr, sizeof(struct in6_addr)) == 0 && a->ip6.sin6_scope_id == b->ip6.sin6_scope_id; 
+	}
 	return memcmp(a, b, sizeof(sockaddr_any)) == 0;
 }
 static void sockaddr_to_string(sockaddr_any* sa, char* str, int strbuflen) {
@@ -150,11 +153,13 @@ static void sockaddr_to_string(sockaddr_any* sa, char* str, int strbuflen) {
 		if (!inet_ntop(AF_INET, &sa->ip4.sin_addr, str, strbuflen)) str[0] = 0;
 		int i = strlen(str);
 		snprintf(str + i, strbuflen - i, ":%u", ntohs(sa->ip4.sin_port));
-	} else if (sa->any.sa_family == AF_INET6) {
+	}
+	else if (sa->any.sa_family == AF_INET6) {
 		if (!inet_ntop(AF_INET6, &sa->ip6.sin6_addr, str, strbuflen)) str[0] = 0;
 		int i = strlen(str);
 		snprintf(str + i, strbuflen - i, "%%%d:%u", sa->ip6.sin6_scope_id, ntohs(sa->ip6.sin6_port));
-	} else {
+	}
+	else {
 		strncpy(str, "Unknown AF", strbuflen);
 	}
 	str[strbuflen - 1] = 0;
@@ -198,7 +203,8 @@ static int init_udp(struct qtsession* session) {
 	if (ai_remote) memcpy(&udpaddr, ai_remote->ai_addr, ai_remote->ai_addrlen);
 	if (!ai_remote || sockaddr_is_zero_address(&udpaddr)) {
 		session->remote_float = 1;
-	} else {
+	}
+	else {
 		session->remote_float = getconf("REMOTE_FLOAT") ? 1 : 0;
 		port = 2998;
 		if ((envval = getconf("REMOTE_PORT"))) port = atoi(envval);
@@ -206,7 +212,8 @@ static int init_udp(struct qtsession* session) {
 		session->remote_addr = udpaddr;
 		if (session->remote_float) {
 			session->remote_float = 2;
-		} else {
+		}
+		else {
 			if (connect(sfd, &udpaddr.any, sa_size)) return errorexitp("Could not connect socket");
 		}
 	}
@@ -268,8 +275,8 @@ void hex2bin(unsigned char* dest, const char* src, const int count) {
 	int i;
 	for (i = 0; i < count; i++) {
 		if (*src >= '0' && *src <= '9') *dest = *src - '0';
-		else if (*src >= 'a' && * src <='f') *dest = *src - 'a' + 10;
-		else if (*src >= 'A' && * src <='F') *dest = *src - 'A' + 10;
+		else if (*src >= 'a' && * src <= 'f') *dest = *src - 'a' + 10;
+		else if (*src >= 'A' && * src <= 'F') *dest = *src - 'A' + 10;
 		src++; *dest = *dest << 4;
 		if (*src >= '0' && *src <= '9') *dest += *src - '0';
 		else if (*src >= 'a' && *src <= 'f') *dest += *src - 'a' + 10;
@@ -300,7 +307,8 @@ static int drop_privileges() {
 static void qtsendnetworkpacket(struct qtsession* session, char* msg, int len) {
 	if (session->remote_float == 0) {
 		len = write(session->fd_socket, msg, len);
-	} else if (session->remote_float == 2) {
+	}
+	else if (session->remote_float == 2) {
 		len = sendto(session->fd_socket, msg, len, 0, (struct sockaddr*)&session->remote_addr, sizeof(sockaddr_any));
 	}
 }
@@ -368,8 +376,9 @@ int qtrun(struct qtproto* p) {
 			sockaddr_any recvaddr;
 			socklen_t recvaddr_len = sizeof(recvaddr);
 			if (session.remote_float == 0) {
-			 	len = read(sfd, buffer_enc + p->offset_enc, p->buffersize_enc);
-			} else {
+				len = read(sfd, buffer_enc + p->offset_enc, p->buffersize_enc);
+			}
+			else {
 				len = recvfrom(sfd, buffer_enc + p->offset_enc, p->buffersize_enc, 0, (struct sockaddr*)&recvaddr, &recvaddr_len);
 			}
 			if (len < 0) {
@@ -377,7 +386,8 @@ int qtrun(struct qtproto* p) {
 				socklen_t slen = sizeof(out);
 				getsockopt(sfd, SOL_SOCKET, SO_ERROR, &out, &slen);
 				fprintf(stderr, "Received end of file on udp socket (error %lld)\n", out);
-			} else {
+			}
+			else {
 				len = p->decode(&session, buffer_enc, buffer_raw + pi_length, len);
 				if (len < 0) continue;
 				if (session.remote_float != 0 && !sockaddr_equal(&session.remote_addr, &recvaddr)) {
@@ -422,14 +432,17 @@ int qtprocessargs(int argc, char** argv) {
 		char* a = argv[i];
 		if (!strcmp(a, "-h") || !strcmp(a, "--help")) {
 			return errorexit("Please read the documentation at http://wiki.ucis.nl/QuickTun");
-		} else if (!strcmp(a, "-v") || !strcmp(a, "--version")) {
+		}
+		else if (!strcmp(a, "-v") || !strcmp(a, "--version")) {
 			return errorexit("UCIS QuickTun "QT_VERSION);
-		} else if (!strcmp(a, "-c")) {
+		}
+		else if (!strcmp(a, "-c")) {
 			gargc = argc;
 			gargv = argv;
 			getconf = getconfcmdargs;
 			i += 2;
-		} else {
+		}
+		else {
 			return errorexit("Unexpected command line argument");
 		}
 	}
