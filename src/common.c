@@ -172,16 +172,30 @@ static int init_udp(struct qtsession* session) {
 	unsigned short af = 0;
 	int ret;
 	if ((envval = getconf("LOCAL_ADDRESS"))) {
-		if ((ret = getaddrinfo(envval, NULL, NULL, &ai_local))) return errorexit2("getaddrinfo(LOCAL_ADDRESS)", gai_strerror(ret));
-		if (!ai_local) return errorexit("LOCAL_ADDRESS lookup failed");
-		if (ai_local->ai_addrlen > sizeof(sockaddr_any)) return errorexit("Resolved LOCAL_ADDRESS is too big");
+		if ((ret = getaddrinfo(envval, NULL, NULL, &ai_local))) {
+			return errorexit2("getaddrinfo(LOCAL_ADDRESS)", gai_strerror(ret));
+		}
+		if (!ai_local){
+			return errorexit("LOCAL_ADDRESS lookup failed");
+		}
+		if (ai_local->ai_addrlen > sizeof(sockaddr_any)){
+			return errorexit("Resolved LOCAL_ADDRESS is too big");
+		}
 		af = ai_local->ai_family;
 	}
 	if ((envval = getconf("REMOTE_ADDRESS"))) {
-		if ((ret = getaddrinfo(envval, NULL, NULL, &ai_remote))) return errorexit2("getaddrinfo(REMOTE_ADDRESS)", gai_strerror(ret));
-		if (!ai_remote) return errorexit("REMOTE_ADDRESS lookup failed");
-		if (ai_remote->ai_addrlen > sizeof(sockaddr_any)) return errorexit("Resolved REMOTE_ADDRESS is too big");
-		if (af && af != ai_remote->ai_family) return errorexit("Address families do not match");
+		if ((ret = getaddrinfo(envval, NULL, NULL, &ai_remote))){
+			return errorexit2("getaddrinfo(REMOTE_ADDRESS)", gai_strerror(ret));
+		}
+		if (!ai_remote){
+			return errorexit("REMOTE_ADDRESS lookup failed");
+		}
+		if (ai_remote->ai_addrlen > sizeof(sockaddr_any)){
+			return errorexit("Resolved REMOTE_ADDRESS is too big");
+		}
+		if (af && af != ai_remote->ai_family){
+			return errorexit("Address families do not match");
+		}
 		af = ai_remote->ai_family;
 	}
 	if (!af) af = AF_INET;
@@ -189,15 +203,23 @@ static int init_udp(struct qtsession* session) {
 	if (af == AF_INET) sa_size = sizeof(struct sockaddr_in);
 	else if (af == AF_INET6) sa_size = sizeof(struct sockaddr_in6);
 	int sfd = socket(af, SOCK_DGRAM, IPPROTO_UDP);
-	if (sfd < 0) return errorexitp("Could not create UDP socket");
+	if (sfd < 0){
+		return errorexitp("Could not create UDP socket");
+	}
 	sockaddr_any udpaddr;
 	memset(&udpaddr, 0, sizeof(udpaddr));
 	udpaddr.any.sa_family = af;
-	if (ai_local) memcpy(&udpaddr, ai_local->ai_addr, ai_local->ai_addrlen);
+	if (ai_local){
+		memcpy(&udpaddr, ai_local->ai_addr, ai_local->ai_addrlen);
+	}
 	int port = 2998;
 	if ((envval = getconf("LOCAL_PORT"))) port = atoi(envval);
-	if (sockaddr_set_port(&udpaddr, port)) return -1;
-	if (bind(sfd, &udpaddr.any, sa_size)) return errorexitp("Could not bind socket");
+	if (sockaddr_set_port(&udpaddr, port)){
+		return -1;
+	}
+	if (bind(sfd, &udpaddr.any, sa_size)){
+		return errorexitp("Could not bind socket");
+	}
 	memset(&udpaddr, 0, sizeof(udpaddr));
 	udpaddr.any.sa_family = af;
 	if (ai_remote) memcpy(&udpaddr, ai_remote->ai_addr, ai_remote->ai_addrlen);
@@ -207,8 +229,12 @@ static int init_udp(struct qtsession* session) {
 	else {
 		session->remote_float = getconf("REMOTE_FLOAT") ? 1 : 0;
 		port = 2998;
-		if ((envval = getconf("REMOTE_PORT"))) port = atoi(envval);
-		if (sockaddr_set_port(&udpaddr, port)) return -1;
+		if ((envval = getconf("REMOTE_PORT"))){
+			port = atoi(envval);
+		}
+		if (sockaddr_set_port(&udpaddr, port)){
+			return -1;
+		}
 		session->remote_addr = udpaddr;
 		if (session->remote_float) {
 			session->remote_float = 2;
@@ -217,8 +243,12 @@ static int init_udp(struct qtsession* session) {
 			if (connect(sfd, &udpaddr.any, sa_size)) return errorexitp("Could not connect socket");
 		}
 	}
-	if (ai_local) freeaddrinfo(ai_local);
-	if (ai_remote) freeaddrinfo(ai_remote);
+	if (ai_local){
+		freeaddrinfo(ai_local);
+	}
+	if (ai_remote){
+		freeaddrinfo(ai_remote);
+	}
 	session->fd_socket = sfd;
 	return sfd;
 }
