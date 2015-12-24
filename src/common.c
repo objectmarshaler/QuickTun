@@ -265,7 +265,10 @@ static int init_tuntap(struct qtsession* session) {
 	struct ifreq ifr; //required for tun/tap setup
 	memset(&ifr, 0, sizeof(ifr));
 	if ((ttfd = open("/dev/net/tun", O_RDWR)) < 0) return errorexitp("Could not open tun/tap device file");
-	if ((envval = getconf("INTERFACE"))) strcpy(ifr.ifr_name, envval);
+	if ((envval = getconf("INTERFACE"))) {
+        strcpy(ifr.ifr_name, envval);
+        fprintf(stderr, "Device name: %s\n",ifr.ifr_name);
+    }
 	ifr.ifr_flags = tunmode ? IFF_TUN : IFF_TAP;
 	if (!session->use_pi) ifr.ifr_flags |= IFF_NO_PI;
 	if (ioctl(ttfd, TUNSETIFF, (void *)&ifr) < 0) return errorexitp("TUNSETIFF ioctl failed");
