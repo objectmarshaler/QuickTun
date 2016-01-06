@@ -27,7 +27,7 @@ The logic is same in server and client.
 SECRET: 717569636b74756e2e6b657970616972203c202f6465762f7572616e646f6d0a
 PUBLIC: c7cd6f724c9966d017fd6397d35e17f2efc1a22ec08b5bb88f7b1140b472bb27
 
-sudo ./out/quicktun -c INTERFACE tun0 -c PROTOCOL nacltai -c TUN_MODE 1 -c PRIVATE_KEY_FILE  ~/QuickTun/secret.key -c PUBLIC_KEY c7cd6f724c9966d017fd6397d35e17f2efc1a22ec08b5bb88f7b1140b472bb27 -c USE_PI=1
+sudo ./out/quicktun -c INTERFACE tun2 -c PROTOCOL nacltai -c TUN_MODE 1 -c PRIVATE_KEY_FILE  ~/QuickTun/secret.key -c PUBLIC_KEY c7cd6f724c9966d017fd6397d35e17f2efc1a22ec08b5bb88f7b1140b472bb27 -c USE_PI=1
 
 sudo ./out/quicktun -c INTERFACE tun0  -c PROTOCOL nacltai -c TUN_MODE 1 -c REMOTE_ADDRESS 10.32.193.94 -c  REMOTE_PORT 2998 -c PRIVATE_KEY_FILE  ~/QuickTun/secret.key -c PUBLIC_KEY c7cd6f724c9966d017fd6397d35e17f2efc1a22ec08b5bb88f7b1140b472bb27 -c USE_PI=1
 
